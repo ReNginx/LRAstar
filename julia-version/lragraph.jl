@@ -4,16 +4,16 @@ using DataStructures
 export Estatus, TNode, LRAGraph, get_graph
 
 struct Estatus
-    lazy::Int
-    real::Int
+    lazy::Float32
+    real::Float32
     has_evaluated:: Bool
 end
 
 struct TNode
     id::Int
-    parent
-    cost::Int
-    lazy::Int
+    parent::Any
+    cost::Float32
+    lazy::Float32
     budget::Int
 end
 
@@ -46,48 +46,62 @@ end
 
 function Graphs.add_edge!(g::LRAGraph, source, target, lazy, real)
     add_edge!(g.graph, source, target)
-    push!(g.Estatus, Estatus(lazy, real, false))
+    push!(g.status, Estatus(lazy, real, false))
 end
 
-function get_graph()
-    nV = read(STDIN, Int)
-    nE = read(STDIN, Int)
-    dept = read(STDIN, Int)
-    dest = read(STDIN, Int)
-    alpha = read(STDIN, Int)
+function getGraph()
+    open("input.txt") do file
+        nV = parse(Int, readline(file))
+        nE = parse(Int, readline(file))
+        dept = parse(Int, readline(file))
+        dest = parse(Int, readline(file))
+        alpha = parse(Int, readline(file))
 
-    g = LRAGraph(simple_graph(nV),
-                Estatus[], Set(),
-                dept,
-                dest,
-                alpha,
-                SortedSet(),
-                SortedSet(),
-                SortedSet(),
-                SortedSet())
+        g = LRAGraph(simple_graph(nV),
+                    Estatus[],
+                    Dict(),
+                    dept,
+                    dest,
+                    alpha,
+                    SortedSet{TNode}(),
+                    SortedSet{TNode}(),
+                    SortedSet{TNode}(),
+                    SortedSet{TNode}())
 
-    for i in 1:nE
-        from = read(STDIN, Int)
-        to = read(STDIN, Int)
-        lazy = read(STDIN, Int)
-        real = read(STDIN, Int)
-        add_edge!(g, from, to, lazy, real)
+        for i in 1:nE
+            from = parse(Int, readline(file))
+            to = parse(Int, readline(file))
+            real = parse(Int, readline(file))
+            lazy = parse(Int, readline(file))
+            if (real == 0x3f3f3f3f)
+                real = Inf
+            end
+            add_edge!(g, from, to, lazy, real)
+            add_edge!(g, to, from, lazy, real)
+        end
+        return g
     end
-    return g
 end
 
 # get tree node of id
 function getNode(graph::LRAGraph, id::Int)
+    @assert isInTree(graph, id) "id:$(id) is not in tree"
     return graph.tree[id]
 end
 
 # get parent node of id
 function getParNode(graph::LRAGraph, id::Int)
     parEdg = getNode(graph, id).parent
+    if (parEdg == nothing)
+        return TNode(0, nothing, 0, 0, 0)
+    end
+    #print(parEdg)
     return getNode(graph, source(parEdg))
 end
 
 function updateTree!(graph::LRAGraph, node::TNode)
+    println("updated $(node)")
+    @assert node.id == graph.dept || isInTree(graph, source(node.parent))
     graph.tree[node.id] = node
 end
 
@@ -100,21 +114,58 @@ function takeOut!(graph::LRAGraph, id::Int)
     if (!isInTree(graph, id))
         return []
     end
-    delete!(graph.tree, id)
+
+    oldNode = getNode(graph, id)
+    if (in(oldNode, graph.frontier))
+        delete!(graph.frontier, oldNode)
+    end
+    if (in(oldNode, graph.extend))
+        delete!(graph.extend, oldNode)
+    end
+
     ret = [id]
-    for e in out_edges(id)
+    for e in out_edges(id, graph.graph)
         if (isInTree(graph, target(e)) &&
             getParNode(graph, target(e)).id == id)
             append!(ret, takeOut!(graph, target(e)))
         end
     end
+    if (id == 619)
+        if (isInTree(graph, 618))
+            println("node of 618 is $(getNode(graph, 618))")
+        end
+    end
+    println("deleted node:$(id)")
+    delete!(graph.tree, id)
     return ret
 end
 
-function realEval()
-
+# we are using two directed edges to represent an undirected edge.
+# make sure these two edges are adjacent in edge array.
+function siblingEdgeId(index::Int)
+    return ((index-1) ⊻ 1) + 1
 end
 
-function lazyEval()
+function realEval(graph::LRAGraph, edge::Graphs.Edge)
+    index = edge_index(edge, graph.graph)
+    real = graph.status[index].real
+    graph.status[index] = Estatus(real, real, true)
+    graph.status[siblingEdgeId(index)] = Estatus(real, real, true)
+    return real
+end
 
+function lazyEval(graph::LRAGraph, edge::Graphs.Edge)
+    index = edge_index(edge, graph.graph)
+    return graph.status[index].lazy
+end
+
+# return a new Tnode by a parent node and an edge.
+function getNewNode(graph::LRAGraph, parNode::TNode, edge::Graphs.Edge)
+    @assert parNode.budget < graph.alpha "node $(target(edge)) budget exceeded"
+    @assert lazyEval(graph, edge) != Inf
+    return TNode(target(edge),
+                edge,
+                parNode.cost,
+                parNode.lazy + lazyEval(graph, edge),
+                parNode.budget + 1)
 end
