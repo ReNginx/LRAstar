@@ -2,6 +2,6 @@ module LRARelated
 
 include("astar.jl")
 
-export LRA
+export LRA, main
 
 end

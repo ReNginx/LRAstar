@@ -1,7 +1,7 @@
 using Graphs
 using DataStructures
 
-export Estatus, TNode, LRAGraph, get_graph
+export Estatus, TNode, LRAGraph
 
 struct Estatus
     lazy::Int
