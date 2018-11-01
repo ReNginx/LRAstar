@@ -170,9 +170,6 @@ module LRARelated
         end
 
         while (!isempty(graph.frontier))
-            if (isInTree(graph, 309))
-                checkPar(graph, getNode(graph, 309))
-            end
             node = pop!(graph.frontier)
             treeRewire = evaluate!(graph, node)
 
@@ -182,20 +179,8 @@ module LRARelated
             end
 
             update!(graph)
-            if (isInTree(graph, 309))
-                checkPar(graph, getNode(graph, 309))
-            end
             rewire!(graph, Set(treeRewire))
-            if (isInTree(graph, 309))
-                checkPar(graph, getNode(graph, 309))
-            end
             extend!(graph)
-
-            for x in graph.tree
-                if (x[1] != graph.dept)
-                    checkPar(graph, x[2])
-                end
-            end
         end
 
         return false
