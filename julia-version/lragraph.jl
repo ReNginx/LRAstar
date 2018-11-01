@@ -4,16 +4,16 @@ using DataStructures
 export Estatus, TNode, LRAGraph, get_graph
 
 struct Estatus
-    lazy::Float32
-    real::Float32
+    lazy::Int
+    real::Int
     has_evaluated:: Bool
 end
 
 struct TNode
     id::Int
     parent::Any
-    cost::Float32
-    lazy::Float32
+    cost::Int
+    lazy::Int
     budget::Int
 end
 
@@ -73,9 +73,9 @@ function getGraph()
             to = parse(Int, readline(file))
             real = parse(Int, readline(file))
             lazy = parse(Int, readline(file))
-            if (real == 0x3f3f3f3f)
-                real = Inf
-            end
+            # if (real == 0x3f3f3f3f)
+            #     real = Inf
+            # end
             add_edge!(g, from, to, lazy, real)
             add_edge!(g, to, from, lazy, real)
         end
@@ -95,12 +95,10 @@ function getParNode(graph::LRAGraph, id::Int)
     if (parEdg == nothing)
         return TNode(0, nothing, 0, 0, 0)
     end
-    #print(parEdg)
     return getNode(graph, source(parEdg))
 end
 
 function updateTree!(graph::LRAGraph, node::TNode)
-    println("updated $(node)")
     @assert node.id == graph.dept || isInTree(graph, source(node.parent))
     graph.tree[node.id] = node
 end
@@ -110,7 +108,7 @@ function isInTree(graph::LRAGraph, id::Int)
 end
 
 # delete subtree rooted at id. and return an array containing all id in the subtree.
-function takeOut!(graph::LRAGraph, id::Int)
+function takeOut!(graph::LRAGraph, id::Int, par::Int = 0)
     if (!isInTree(graph, id))
         return []
     end
@@ -130,12 +128,6 @@ function takeOut!(graph::LRAGraph, id::Int)
             append!(ret, takeOut!(graph, target(e)))
         end
     end
-    if (id == 619)
-        if (isInTree(graph, 618))
-            println("node of 618 is $(getNode(graph, 618))")
-        end
-    end
-    println("deleted node:$(id)")
     delete!(graph.tree, id)
     return ret
 end
