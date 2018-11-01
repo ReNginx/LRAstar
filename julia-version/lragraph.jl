@@ -3,6 +3,8 @@ using DataStructures
 
 export Estatus, TNode, LRAGraph
 
+const INF = 0x3f3f3f3f
+
 struct Estatus
     lazy::Int
     real::Int
@@ -28,6 +30,7 @@ struct LRAGraph
     rewire::SortedSet{TNode}
     update::SortedSet{TNode}
     extend::SortedSet{TNode}
+    evaledEdgeCounter::DataStructures.Accumulator{String,Int64}
 end
 
 function Base.hash(x::TNode)
@@ -66,7 +69,8 @@ function getGraph()
                     SortedSet{TNode}(),
                     SortedSet{TNode}(),
                     SortedSet{TNode}(),
-                    SortedSet{TNode}())
+                    SortedSet{TNode}(),
+                    counter(String))
 
         for i in 1:nE
             from = parse(Int, readline(file))
@@ -140,6 +144,9 @@ end
 
 function realEval(graph::LRAGraph, edge::Graphs.Edge)
     index = edge_index(edge, graph.graph)
+    if (graph.status[index].has_evaluated == false)
+        push!(graph.evaledEdgeCounter, "total")
+    end
     real = graph.status[index].real
     graph.status[index] = Estatus(real, real, true)
     graph.status[siblingEdgeId(index)] = Estatus(real, real, true)

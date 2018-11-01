@@ -11,7 +11,7 @@ function evaluate!(graph::LRAGraph, node::TNode)
     edgToEval = node.parent
     realEdgCost = realEval(graph, edgToEval)
 
-    if (realEdgCost != 0x3f3f3f3f)
+    if (realEdgCost != INF)
         newChildNode = TNode(node.id, edgToEval, parNode.cost+realEdgCost, 0, 0)
         updateTree!(graph, newChildNode)
         push!(graph.update, newChildNode)
@@ -69,7 +69,7 @@ function rewire!(graph::LRAGraph, treeRewire::Set)
                     for e in in_edges(v, graph.graph)
                     if (isInTree(graph, source(e)) &&
                         !in(source(e), treeRewire) &&
-                        lazyEval(graph, e) != 0x3f3f3f3f &&
+                        lazyEval(graph, e) != INF &&
                         getNode(graph, source(e)).budget < graph.alpha)]
 
         if (length(newNodes) == 0)
@@ -95,7 +95,7 @@ function rewire!(graph::LRAGraph, treeRewire::Set)
             push!(graph.extend, node)
         end
         for e in out_edges(node.id, graph.graph)
-            if (lazyEval(graph, e) == 0x3f3f3f3f || !in(target(e), treeRewire))
+            if (lazyEval(graph, e) == INF || !in(target(e), treeRewire))
                 continue
             end
             v = target(e)
@@ -126,7 +126,7 @@ function extend!(graph::LRAGraph)
 
         for e in out_edges(node.id, graph.graph)
             leval = lazyEval(graph, e)
-            if (leval == 0x3f3f3f3f)
+            if (leval == INF)
                 continue
             end
             if (isInTree(graph, target(e)))
@@ -195,7 +195,8 @@ function main()
     graph = getGraph()
     if (LRA(graph))
         prtPath(graph, graph.dest)
-        println("$(getNode(graph, graph.dest).cost)")
+        println("distance from dept to dest: $(getNode(graph, graph.dest).cost)")
+        println("""number of evaled edges: $(graph.evaledEdgeCounter["total"])""")
     else
         println("Fail to find a path")
     end
