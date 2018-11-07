@@ -25,7 +25,8 @@ end
 function prtPath(graph, id)
     if (id != graph.dept)
         prtPath(graph, getParNode(graph, id).id)
-        println("Edge from parent to current node: $(getNode(graph, id).parent)\nDistance from dept to current node:$(getNode(graph, id).cost)\n")
+        #println("Edge from parent to current node: $(getNode(graph, id).parent)\nDistance from dept to current node:$(getNode(graph, id).cost)\n")
+        println("$(id) $(getParNode(graph, id).id)")
     end
 end
 
@@ -195,8 +196,17 @@ function main()
     graph = getGraph()
     if (LRA(graph))
         prtPath(graph, graph.dest)
-        println("distance from dept to dest: $(getNode(graph, graph.dest).cost)")
-        println("""number of evaled edges: $(graph.evaledEdgeCounter["total"])""")
+        # println("distance from dept to dest: $(getNode(graph, graph.dest).cost)")
+        # println("""number of evaled edges: $(graph.evaledEdgeCounter["total"])""")
+        open("res.txt", "w") do f
+            write(f, "$(graph.evaledEdgeCounter["total"])\n")
+            for e in edges(graph.graph)
+                index = edge_index(e, graph.graph)
+                if (graph.status[index].has_evaluated)
+                    write(f, "$(source(e)) $(target(e))\n")
+                end
+            end
+        end
     else
         println("Fail to find a path")
     end
