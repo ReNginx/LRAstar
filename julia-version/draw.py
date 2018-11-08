@@ -1,10 +1,15 @@
 import numpy as np
-import turtle as tl
 import math
 import heapq
 
 ang_gap = 30
 dis_gap = 2
+
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+ax = plt.gca() # get current axes
+ax.set_aspect(1.0)
 
 class segment:
     def __init__(self, p1, p2):
@@ -60,14 +65,10 @@ def advance(x, y, th, d, nth):
     return (nx, ny, nth-360 if nth >= 360 else nth)
 
 def show_seg(seg):
-    tl.setpos(seg.p1)
-    tl.pendown()
-    tl.goto(seg.p2)
-    tl.penup()
+    ax.plot([seg.p1[0], seg.p2[0]], [seg.p1[1], seg.p2[1]], color="blue")
 
 def show_obj(obj):
     seg_list = obj.get_seg_list()
-    tl.penup()
     for seg in seg_list:
         show_seg(seg)
 
@@ -85,10 +86,6 @@ def astar(obs, rob, target = (1, 0.50, 180)):
         print(cur)
         di= cur[1]
         cur = cur[2]
-
-        #tl.goto(cur[0]*100, cur[1]*100)
-#         tl.pendown()
-#         tl.penup()
 
         for ang in range(0, 360, ang_gap):
             nxt = advance(cur[0], cur[1], cur[2], dis_gap, ang+cur[2])
@@ -124,8 +121,6 @@ if __name__ == "__main__":
     bottom = 0
     left = 0
     right = 55
-    tl.setworldcoordinates(left,bottom,right,top)
-    tl.speed(0)
     p1 = (0,0)
     p2 = (0,40)
     p3 = (40,0)
@@ -169,4 +164,4 @@ if __name__ == "__main__":
     for x in s:
         show_seg(segment((x[0],x[1]),(x[2],x[3])))
 
-    tl.done()
+    plt.show()
