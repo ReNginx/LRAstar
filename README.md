@@ -1,2 +1,2 @@
 # LRAstar
-an naive implementation of Lazy Receding Astar Algorithm
+a naive implementation of Lazy Receding Astar Algorithm
